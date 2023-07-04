@@ -1,0 +1,64 @@
+{
+  "name": "console-log-tracker",
+  "displayName": "Console log tracker",
+  "description": "Count, locate, comment, and delete console.log statements in your code.",
+  "version": "0.0.1",
+  "publisher": "CarlosSpagnoletti",
+  "icon": "logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cascharly/console-log-tracker"
+  },
+  "engines": {
+    "vscode": "^1.78.0"
+  },
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.showNotification",
+        "title": "Show Notification"
+      }
+    ],
+    "statusbar": [
+      {
+        "id": "consoleLogCounter.status",
+        "alignment": "right",
+        "priority": 100,
+        "name": "$(alert) Console Log Counter",
+        "text": "$(alert) Initializing...",
+        "color": "#00FF00"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.78.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
+    "@vscode/test-electron": "^2.3.0",
+    "eslint": "^8.39.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@vscode/vsce": "^2.19.0"
+  }
+}
