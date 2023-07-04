@@ -1,6 +1,6 @@
 This Visual Studio Code extension provides functionality to count, locate, comment, and delete `console.log` statements in your code.
 
-<image src="example_1.png" alt="example">
+![example](example_1.png)
 
 ## Features
 
