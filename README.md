@@ -1,5 +1,7 @@
 This Visual Studio Code extension provides functionality to count, locate, comment, and delete `console.log` statements in your code.
 
+<image src="example_1.png" alt="example">
+
 ## Features
 
 - Counts the number of `console.log` statements in the active text document and displays the count in the status bar.
@@ -16,7 +18,6 @@ This Visual Studio Code extension provides functionality to count, locate, comme
 2. The extension will automatically count the `console.log` statements and display the count in the status bar.
 3. Click on the status bar item to open a dropdown menu with action options for `console.log` statements.
 4. Choose an action from the dropdown menu to perform the selected action on `console.log` statements.
-
 
 ## Notes
 
