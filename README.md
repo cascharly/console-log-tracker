@@ -9,8 +9,8 @@ This Visual Studio Code extension provides functionality to count, locate, comme
   - **Highlight**: Highlights all lines containing `console.log` statements.
   - **Locate**: Move the cursor to the first `console.log` occurrence.
   - **Comment**: Comments out all `console.log` statements.
-  - **Delete**: Deletes all `console.log` statements.
   - **Uncomment**: Uncomments all commented `console.log` statements.
+  - **Delete**: Deletes all `console.log` statements.
 
 ## Usage
 
