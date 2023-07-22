@@ -5,12 +5,12 @@ This Visual Studio Code extension provides functionality to count, locate, comme
 ## Features
 
 - Counts the number of `console.log` statements in the active text document and displays the count in the status bar.
-- Highlights all lines containing `console.log` statements in the active text editor.
 - Provides options in the status bar to perform actions on `console.log` statements:
-  - **Locate**: Highlights all lines containing `console.log` statements in the active text editor.
-  - **Comment**: Comments out all `console.log` statements in the active text editor.
-  - **Delete**: Deletes all `console.log` statements in the active text editor.
-  - **Uncomment**: Uncomments all commented `console.log` statements in the active text editor.
+  - **Highlight**: Highlights all lines containing `console.log` statements.
+  - **Locate**: Move the cursor to the first `console.log` occurrence.
+  - **Comment**: Comments out all `console.log` statements.
+  - **Delete**: Deletes all `console.log` statements.
+  - **Uncomment**: Uncomments all commented `console.log` statements.
 
 ## Usage
 
