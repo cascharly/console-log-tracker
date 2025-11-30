@@ -2,16 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const vscode = require("vscode");
+const DEBOUNCE_MS = 2000;
 let statusBarItem;
 let timeout;
 function activate(context) {
     // Create a status bar item
-    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     context.subscriptions.push(statusBarItem);
     // Register the event listeners for text document events
-    vscode.workspace.onDidChangeTextDocument(handleTextDocumentChange);
-    vscode.window.onDidChangeActiveTextEditor(handleActiveTextEditorChange);
-    vscode.window.onDidChangeTextEditorSelection(handleTextEditorSelectionChange);
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(handleTextDocumentChange), vscode.window.onDidChangeActiveTextEditor(handleActiveTextEditorChange), vscode.window.onDidChangeTextEditorSelection(handleTextEditorSelectionChange));
     // Scan the active file initially
     const activeTextEditor = vscode.window.activeTextEditor;
     if (activeTextEditor) {
@@ -55,7 +54,7 @@ function handleTextDocumentChange(event) {
     // Start a new timeout to rescan the document after 2 seconds of inactivity
     timeout = setTimeout(() => {
         scanDocument(event.document);
-    }, 1000);
+    }, DEBOUNCE_MS);
 }
 function handleActiveTextEditorChange(editor) {
     if (editor) {
@@ -88,7 +87,7 @@ function updateStatusBar(count) {
         }
     }
 }
-function commentAllConsoleLogs() {
+async function commentAllConsoleLogs() {
     const activeTextEditor = vscode.window.activeTextEditor;
     if (activeTextEditor) {
         const document = activeTextEditor.document;
@@ -104,21 +103,21 @@ function commentAllConsoleLogs() {
             }
         }
         // Apply the workspace edit
-        vscode.workspace.applyEdit(edit).then(() => {
+        const success = await vscode.workspace.applyEdit(edit);
+        if (success) {
             // Adjust the selection ranges after applying the edit
             activeTextEditor.selections = activeTextEditor.selections.map((selection) => {
                 const line = document.lineAt(selection.active.line);
                 const adjustedSelection = new vscode.Selection(new vscode.Position(line.range.end.line, line.range.end.character), new vscode.Position(line.range.end.line, line.range.end.character));
                 return adjustedSelection;
             });
-        });
+        }
     }
 }
 function highlightAllConsoleLogs() {
     const activeTextEditor = vscode.window.activeTextEditor;
     if (activeTextEditor) {
         const document = activeTextEditor.document;
-        const edit = new vscode.WorkspaceEdit();
         const decorationType = vscode.window.createTextEditorDecorationType({
             borderColor: "#FFB471",
             borderWidth: "1px",
@@ -181,7 +180,7 @@ function locateAllConsoleLogs() {
         });
     }
 }
-function deleteAllConsoleLogs() {
+async function deleteAllConsoleLogs() {
     const activeTextEditor = vscode.window.activeTextEditor;
     if (activeTextEditor) {
         const document = activeTextEditor.document;
@@ -196,10 +195,10 @@ function deleteAllConsoleLogs() {
             }
         }
         // Apply the workspace edit
-        vscode.workspace.applyEdit(edit);
+        await vscode.workspace.applyEdit(edit);
     }
 }
-function uncommentAllConsoleLogs() {
+async function uncommentAllConsoleLogs() {
     const activeTextEditor = vscode.window.activeTextEditor;
     if (activeTextEditor) {
         const document = activeTextEditor.document;
@@ -215,7 +214,7 @@ function uncommentAllConsoleLogs() {
             }
         }
         // Apply the workspace edit
-        vscode.workspace.applyEdit(edit);
+        await vscode.workspace.applyEdit(edit);
     }
 }
 function deactivate() {
