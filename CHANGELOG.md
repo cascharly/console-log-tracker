@@ -2,6 +2,12 @@
 
 All notable changes to the "console-log-tracker" extension will be documented in this file.
 
+## [0.0.10] - 2025-11-30
+
+### Changed
+- Updated README.md with better formatting and clearer instructions
+- Improved documentation structure
+
 ## [0.0.9] - 2025-11-30
 
 ### Changed
