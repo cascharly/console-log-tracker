@@ -83,7 +83,10 @@ function refresh() {
   if (editor) {
     performScan(editor.document);
   }
+  console.log('refresh');
 }
+
+console.log('refresh');
 
 function debouncedScan(document: vscode.TextDocument) {
   if (timeout) {
