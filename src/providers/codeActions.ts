@@ -26,6 +26,8 @@ export class ConsoleActionProvider implements vscode.CodeActionProvider {
 
         // Check if the current line has an active console log
         if (logRegex.test(line)) {
+            const lineRange = document.lineAt(range.start.line).range;
+
             const commentAction = new vscode.CodeAction(
                 'Comment out this log',
                 vscode.CodeActionKind.QuickFix
@@ -33,7 +35,8 @@ export class ConsoleActionProvider implements vscode.CodeActionProvider {
             // We pass the document uri to the command if needed, but for now we reuse the existing batch commands
             commentAction.command = {
                 command: 'extension.commentAllLogs',
-                title: 'Comment'
+                title: 'Comment',
+                arguments: [lineRange]
             };
             actions.push(commentAction);
 
@@ -43,7 +46,8 @@ export class ConsoleActionProvider implements vscode.CodeActionProvider {
             );
             deleteAction.command = {
                 command: 'extension.deleteAllLogs',
-                title: 'Delete'
+                title: 'Delete',
+                arguments: [lineRange]
             };
             actions.push(deleteAction);
         }

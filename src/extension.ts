@@ -49,17 +49,17 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('extension.showMenu', showQuickPickMenu),
     vscode.commands.registerCommand('extension.nextLog', () => navigateLogs(currentLogLocations, 1)),
     vscode.commands.registerCommand('extension.previousLog', () => navigateLogs(currentLogLocations, -1)),
-    vscode.commands.registerCommand('extension.commentAllLogs', () => {
+    vscode.commands.registerCommand('extension.commentAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) { commentAllConsoleLogs(editor.document); }
+      if (editor) { commentAllConsoleLogs(editor.document, range); }
     }),
-    vscode.commands.registerCommand('extension.uncommentAllLogs', () => {
+    vscode.commands.registerCommand('extension.uncommentAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) { uncommentAllConsoleLogs(editor.document); }
+      if (editor) { uncommentAllConsoleLogs(editor.document, range); }
     }),
-    vscode.commands.registerCommand('extension.deleteAllLogs', () => {
+    vscode.commands.registerCommand('extension.deleteAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) { deleteAllConsoleLogs(editor.document); }
+      if (editor) { deleteAllConsoleLogs(editor.document, range); }
     })
   );
 
