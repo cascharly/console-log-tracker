@@ -2,6 +2,22 @@
 
 All notable changes to the "console-log-tracker" extension will be documented in this file.
 
+## [0.1.0] - 2026-02-11
+
+### Added
+- **Modern QuickPick UI**: Replaced the basic notification menu with a searchable QuickPick menu for faster actions.
+- **Support for more console methods**: Now tracks and manages `warn`, `error`, `info`, `debug`, `table`, etc., in addition to `log`.
+- **Keyboard Shortcuts**: Added `Ctrl+Shift+L` (Next log) and `Ctrl+Shift+Alt+L` (Previous log) for fast navigation.
+- **Auto-Cleanup on Save**: Added an optional setting to automatically comment out logs when saving a file.
+- **Code Actions (Lightbulbs)**: Quick-access lightbulb menu for individual logs.
+- **Customizable Highlighting**: Added settings to change the highlight color and style according to user preference.
+- **Smarter Scanner**: Improved scanning logic to ignore console statements inside strings or existing comments.
+- **Comprehensive Settings**: Complete set of configuration options to toggle features on/off.
+
+### Changed
+- Refactored core audio engine and processing pipeline (Internal cleanup).
+- Standardized status bar priority to stay visible alongside other extensions.
+
 ## [0.0.10] - 2025-11-30
 
 ### Changed

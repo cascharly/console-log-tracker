@@ -2,7 +2,7 @@
   "name": "console-log-tracker",
   "displayName": "Console log tracker",
   "description": "Count, locate, comment, and delete console.log statements in your code.",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "publisher": "CarlosSpagnoletti",
   "icon": "logo.png",
   "repository": {
@@ -20,10 +20,93 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Console Log Tracker",
+      "properties": {
+        "consoleLogTracker.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the console log tracking features."
+        },
+        "consoleLogTracker.methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "log",
+              "warn",
+              "error",
+              "info",
+              "debug",
+              "table",
+              "trace",
+              "dir",
+              "group"
+            ]
+          },
+          "default": [
+            "log",
+            "warn",
+            "error",
+            "info"
+          ],
+          "description": "Select which console methods to track."
+        },
+        "consoleLogTracker.highlightColor": {
+          "type": "string",
+          "default": "#FFB471",
+          "description": "Color for the highlight border of console logs."
+        },
+        "consoleLogTracker.debounceTimeout": {
+          "type": "number",
+          "default": 1000,
+          "description": "Timeout in milliseconds to wait before rescanning after a change."
+        },
+        "consoleLogTracker.autoCleanupOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically comment out console logs when saving the file."
+        }
+      }
+    },
     "commands": [
       {
-        "command": "extension.showNotification",
-        "title": "Show Notification"
+        "command": "extension.showMenu",
+        "title": "Console Log Tracker: Show Menu"
+      },
+      {
+        "command": "extension.nextLog",
+        "title": "Console Log Tracker: Go to Next Log"
+      },
+      {
+        "command": "extension.previousLog",
+        "title": "Console Log Tracker: Go to Previous Log"
+      },
+      {
+        "command": "extension.commentAllLogs",
+        "title": "Console Log Tracker: Comment All Logs"
+      },
+      {
+        "command": "extension.uncommentAllLogs",
+        "title": "Console Log Tracker: Uncomment All Logs"
+      },
+      {
+        "command": "extension.deleteAllLogs",
+        "title": "Console Log Tracker: Delete All Logs"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.nextLog",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.previousLog",
+        "key": "ctrl+shift+alt+l",
+        "mac": "cmd+shift+alt+l",
+        "when": "editorTextFocus"
       }
     ],
     "statusbar": [
@@ -31,9 +114,7 @@
         "id": "consoleLogCounter.status",
         "alignment": "right",
         "priority": 100,
-        "name": "$(alert) Console Log Counter",
-        "text": "$(alert) Initializing...",
-        "color": "#00FF00"
+        "name": "$(alert) Console Log Counter"
       }
     ]
   },

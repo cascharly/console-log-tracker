@@ -1,323 +1,308 @@
 import * as vscode from "vscode";
 
-const DEBOUNCE_MS = 2000;
-
-let statusBarItem: vscode.StatusBarItem | undefined;
+let statusBarItem: vscode.StatusBarItem;
 let timeout: NodeJS.Timeout | undefined;
+let decorationType: vscode.TextEditorDecorationType | undefined;
+let logLocations: vscode.Range[] = [];
 
 export function activate(context: vscode.ExtensionContext) {
-  // Create a status bar item
+  // Initialize Status Bar
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     100
   );
+  statusBarItem.command = "extension.showMenu";
   context.subscriptions.push(statusBarItem);
 
-  // Register the event listeners for text document events
+  // Initialize Decoration Type from config
+  updateDecorationType();
+
+  // --- Configuration ---
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument(handleTextDocumentChange),
-    vscode.window.onDidChangeActiveTextEditor(handleActiveTextEditorChange),
-    vscode.window.onDidChangeTextEditorSelection(handleTextEditorSelectionChange)
-  );
-
-  // Scan the active file initially
-  const activeTextEditor: vscode.TextEditor | undefined =
-    vscode.window.activeTextEditor;
-  if (activeTextEditor) {
-    scanDocument(activeTextEditor.document);
-  }
-
-  // Register the status bar item click handler
-  statusBarItem.command = "extension.showNotification";
-  context.subscriptions.push(
-    vscode.commands.registerCommand("extension.showNotification", () => {
-      const optionHighLightAll: vscode.MessageItem = { title: "HighLight" };
-      const optionLocate: vscode.MessageItem = { title: "Locate" };
-      const optionCommentAll: vscode.MessageItem = { title: "Comment" };
-      const optionUncommentAll: vscode.MessageItem = { title: "Uncomment" };
-      const optionDeleteCommented: vscode.MessageItem = { title: "Delete" };
-
-      vscode.window
-        .showInformationMessage(
-          "Action for console.log statements.",
-          optionHighLightAll,
-          optionLocate,
-          optionCommentAll,
-          optionUncommentAll,
-          optionDeleteCommented
-        )
-        .then((selectedOption) => {
-          if (selectedOption === optionCommentAll) {
-            commentAllConsoleLogs();
-          } else if (selectedOption === optionHighLightAll) {
-            highlightAllConsoleLogs();
-          } else if (selectedOption === optionDeleteCommented) {
-            deleteAllConsoleLogs();
-          } else if (selectedOption === optionUncommentAll) {
-            uncommentAllConsoleLogs();
-          } else if (selectedOption === optionLocate) {
-            locateAllConsoleLogs();
-          }
-        });
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("consoleLogTracker")) {
+        updateDecorationType();
+        refresh();
+      }
     })
   );
+
+  // --- Event Listeners ---
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      debouncedScan(e.document);
+    }),
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        scanDocument(editor.document);
+      }
+    }),
+    vscode.workspace.onWillSaveTextDocument((e) => {
+      const config = vscode.workspace.getConfiguration("consoleLogTracker");
+      if (config.get("autoCleanupOnSave")) {
+        commentAllConsoleLogs(e.document);
+      }
+    })
+  );
+
+  // --- Commands ---
+  context.subscriptions.push(
+    vscode.commands.registerCommand("extension.showMenu", showMenu),
+    vscode.commands.registerCommand("extension.nextLog", () => navigateLogs(1)),
+    vscode.commands.registerCommand("extension.previousLog", () => navigateLogs(-1)),
+    vscode.commands.registerCommand("extension.commentAllLogs", () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) { commentAllConsoleLogs(editor.document); }
+    }),
+    vscode.commands.registerCommand("extension.uncommentAllLogs", () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) { uncommentAllConsoleLogs(editor.document); }
+    }),
+    vscode.commands.registerCommand("extension.deleteAllLogs", () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) { deleteAllConsoleLogs(editor.document); }
+    })
+  );
+
+  // --- Code Actions ---
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+      new ConsoleActionProvider(),
+      {
+        providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+      }
+    )
+  );
+
+  // Initial scan
+  refresh();
 }
 
-function handleTextDocumentChange(event: vscode.TextDocumentChangeEvent) {
-  // Clear the previous timeout
-  if (timeout) {
-    clearTimeout(timeout);
+/**
+ * Updates the decoration style based on user settings
+ */
+function updateDecorationType() {
+  if (decorationType) {
+    decorationType.dispose();
   }
+  const config = vscode.workspace.getConfiguration("consoleLogTracker");
+  const color = config.get<string>("highlightColor", "#FFB471");
 
-  // Start a new timeout to rescan the document after 2 seconds of inactivity
-  timeout = setTimeout(() => {
-    scanDocument(event.document);
-  }, DEBOUNCE_MS);
+  decorationType = vscode.window.createTextEditorDecorationType({
+    borderColor: color,
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderRadius: "2px",
+    overviewRulerColor: color,
+    overviewRulerLane: vscode.OverviewRulerLane.Right
+  });
 }
 
-function handleActiveTextEditorChange(editor: vscode.TextEditor | undefined) {
+/**
+ * Triggers a scan of the current document
+ */
+function refresh() {
+  const editor = vscode.window.activeTextEditor;
   if (editor) {
     scanDocument(editor.document);
   }
 }
 
-function handleTextEditorSelectionChange(
-  event: vscode.TextEditorSelectionChangeEvent
-) {
-  if (event.textEditor) {
-    scanDocument(event.textEditor.document);
+/**
+ * Debounced scan to avoid performance issues during typing
+ */
+function debouncedScan(document: vscode.TextDocument) {
+  if (timeout) {
+    clearTimeout(timeout);
   }
+  const config = vscode.workspace.getConfiguration("consoleLogTracker");
+  const delay = config.get<number>("debounceTimeout", 1000);
+
+  timeout = setTimeout(() => {
+    scanDocument(document);
+  }, delay);
 }
 
+/**
+ * Core scanning logic
+ */
 function scanDocument(document: vscode.TextDocument) {
-  let count: number = 0;
-
-  for (let lineIndex: number = 0; lineIndex < document.lineCount; lineIndex++) {
-    const line: vscode.TextLine = document.lineAt(lineIndex);
-
-    if (line.text.includes("console.log(")) {
-      count++;
-    }
+  const config = vscode.workspace.getConfiguration("consoleLogTracker");
+  if (!config.get("enabled")) {
+    statusBarItem.hide();
+    return;
   }
 
-  updateStatusBar(count);
+  const methods = config.get<string[]>("methods", ["log"]);
+  const methodsRegex = methods.join("|");
+  const regex = new RegExp(`(?<!\\/\\/.*|\\/\\*.*)console\\.(${methodsRegex})\\(`, "g");
+
+  logLocations = [];
+  const text = document.getText();
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const startPos = document.positionAt(match.index);
+    const endPos = document.lineAt(startPos.line).range.end;
+    logLocations.push(new vscode.Range(startPos, endPos));
+  }
+
+  updateUI(logLocations.length);
 }
 
-function updateStatusBar(count: number) {
-  if (statusBarItem) {
-    if (count === 0) {
-      statusBarItem.hide();
+function updateUI(count: number) {
+  if (count > 0) {
+    statusBarItem.text = `$(list-unordered) ${count} logs found`;
+    statusBarItem.show();
+  } else {
+    statusBarItem.hide();
+  }
+
+  const editor = vscode.window.activeTextEditor;
+  if (editor && decorationType) {
+    editor.setDecorations(decorationType, logLocations);
+  }
+}
+
+/**
+ * Modern QuickPick Menu
+ */
+async function showMenu() {
+  const items: vscode.QuickPickItem[] = [
+    { label: "$(search) Locate All", detail: "Highlight all logs in current file", id: "locate" } as any,
+    { label: "$(arrow-down) Next Log", detail: "Jump to the next occurrence", id: "next" } as any,
+    { label: "$(comment) Comment All", detail: "Prefix all logs with //", id: "comment" } as any,
+    { label: "$(comment-discussion) Uncomment All", detail: "Remove // from logs", id: "uncomment" } as any,
+    { label: "$(trash) Delete All", detail: "Remove all logs from file", id: "delete" } as any,
+    { label: "$(settings-gear) Settings", detail: "Open extension settings", id: "settings" } as any
+  ];
+
+  const selection = await vscode.window.showQuickPick(items, {
+    placeHolder: "Console Log Tracker Actions"
+  });
+
+  if (!selection) return;
+
+  switch ((selection as any).id) {
+    case "locate": navigateLogs(0); break;
+    case "next": navigateLogs(1); break;
+    case "comment": vscode.commands.executeCommand("extension.commentAllLogs"); break;
+    case "uncomment": vscode.commands.executeCommand("extension.uncommentAllLogs"); break;
+    case "delete": vscode.commands.executeCommand("extension.deleteAllLogs"); break;
+    case "settings": vscode.commands.executeCommand("workbench.action.openSettings", "consoleLogTracker"); break;
+  }
+}
+
+/**
+ * Handles navigation between logs
+ */
+function navigateLogs(direction: number) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor || logLocations.length === 0) return;
+
+  const currentPos = editor.selection.active;
+  let targetIndex = 0;
+
+  if (direction === 0) {
+    targetIndex = 0;
+  } else {
+    // Find the next/previous log relative to cursor
+    if (direction > 0) {
+      targetIndex = logLocations.findIndex(r => r.start.isAfter(currentPos));
+      if (targetIndex === -1) targetIndex = 0;
     } else {
-      statusBarItem.text = `${count} console.log found`;
-      statusBarItem.show();
+      targetIndex = logLocations.slice().reverse().findIndex(r => r.start.isBefore(currentPos));
+      if (targetIndex === -1) targetIndex = logLocations.length - 1;
+      else targetIndex = logLocations.length - 1 - targetIndex;
     }
   }
+
+  const targetRange = logLocations[targetIndex];
+  editor.selection = new vscode.Selection(targetRange.start, targetRange.start);
+  editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
 }
 
-async function commentAllConsoleLogs() {
-  const activeTextEditor: vscode.TextEditor | undefined =
-    vscode.window.activeTextEditor;
-  if (activeTextEditor) {
-    const document: vscode.TextDocument = activeTextEditor.document;
-    const edit = new vscode.WorkspaceEdit();
+/**
+ * Batch Actions
+ */
+async function commentAllConsoleLogs(document: vscode.TextDocument) {
+  const edit = new vscode.WorkspaceEdit();
+  const config = vscode.workspace.getConfiguration("consoleLogTracker");
+  const methods = config.get<string[]>("methods", ["log"]).join("|");
+  const regex = new RegExp(`^(\\s*)(console\\.(${methods})\\(.*\\);?)`, "gm");
 
-    const consoleLogRegex = /(^|\s)console\.log\([^)]*\);/g;
-
-    for (
-      let lineIndex: number = 0;
-      lineIndex < document.lineCount;
-      lineIndex++
-    ) {
-      const line: vscode.TextLine = document.lineAt(lineIndex);
-      const match: RegExpMatchArray | null = line.text.match(consoleLogRegex);
-      if (match && !line.text.trim().startsWith("/*")) {
-        const range = line.range;
-        const commentedLine = `// ${line.text.replace(
-          match[0],
-          match[0].replace(/console\.log/, "console.log").replace(/\);$/, ");")
-        )}`;
-        edit.replace(document.uri, range, commentedLine);
-      }
-    }
-
-    // Apply the workspace edit
-    const success = await vscode.workspace.applyEdit(edit);
-    if (success) {
-      // Adjust the selection ranges after applying the edit
-      activeTextEditor.selections = activeTextEditor.selections.map(
-        (selection) => {
-          const line: vscode.TextLine = document.lineAt(selection.active.line);
-          const adjustedSelection = new vscode.Selection(
-            new vscode.Position(line.range.end.line, line.range.end.character),
-            new vscode.Position(line.range.end.line, line.range.end.character)
-          );
-          return adjustedSelection;
-        }
-      );
-    }
+  const text = document.getText();
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    const startPos = document.positionAt(match.index);
+    const endPos = document.positionAt(match.index + match[0].length);
+    edit.replace(document.uri, new vscode.Range(startPos, endPos), `${match[1]}// ${match[2]}`);
   }
+  await vscode.workspace.applyEdit(edit);
 }
 
-function highlightAllConsoleLogs() {
-  const activeTextEditor: vscode.TextEditor | undefined =
-    vscode.window.activeTextEditor;
-  if (activeTextEditor) {
-    const document: vscode.TextDocument = activeTextEditor.document;
-    const decorationType: vscode.TextEditorDecorationType =
-      vscode.window.createTextEditorDecorationType({
-        borderColor: "#FFB471",
-        borderWidth: "1px",
-        borderStyle: "solid",
-      });
-    const decorations: any[] = [];
+async function uncommentAllConsoleLogs(document: vscode.TextDocument) {
+  const edit = new vscode.WorkspaceEdit();
+  const config = vscode.workspace.getConfiguration("consoleLogTracker");
+  const methods = config.get<string[]>("methods", ["log"]).join("|");
+  const regex = new RegExp(`^(\\s*)\\/\\/\\s*(console\\.(${methods})\\(.*\\);?)`, "gm");
 
-    for (
-      let lineIndex: number = 0;
-      lineIndex < document.lineCount;
-      lineIndex++
-    ) {
-      const line: vscode.TextLine = document.lineAt(lineIndex);
-      if (
-        line.text.includes("console.log") &&
-        !line.text.includes("'console.log'") &&
-        !line.text.includes('"console.log"')
-      ) {
-        const startPosition: vscode.Position = line.range.start;
-        const endPosition: vscode.Position = line.range.end;
-        const range = new vscode.Range(startPosition, endPosition);
-        decorations.push({ range });
-      }
-    }
-
-    activeTextEditor.setDecorations(decorationType, decorations);
-
-    const disposable = vscode.window.onDidChangeTextEditorSelection((event) => {
-      if (event.textEditor === activeTextEditor) {
-        activeTextEditor.setDecorations(decorationType, []);
-        disposable.dispose();
-      }
-    });
+  const text = document.getText();
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    const startPos = document.positionAt(match.index);
+    const endPos = document.positionAt(match.index + match[0].length);
+    edit.replace(document.uri, new vscode.Range(startPos, endPos), `${match[1]}${match[2]}`);
   }
+  await vscode.workspace.applyEdit(edit);
 }
 
-function locateAllConsoleLogs() {
-  const activeTextEditor: vscode.TextEditor | undefined =
-    vscode.window.activeTextEditor;
-  if (activeTextEditor) {
-    const document: vscode.TextDocument = activeTextEditor.document;
-    const decorationType: vscode.TextEditorDecorationType =
-      vscode.window.createTextEditorDecorationType({
-        borderColor: "#FFB471",
-        borderWidth: "1px",
-        borderStyle: "solid",
-      });
+async function deleteAllConsoleLogs(document: vscode.TextDocument) {
+  const edit = new vscode.WorkspaceEdit();
+  const config = vscode.workspace.getConfiguration("consoleLogTracker");
+  const methods = config.get<string[]>("methods", ["log"]).join("|");
+  const regex = new RegExp(`^.*console\\.(${methods})\\(.*\\);?\\r?\\n?`, "gm");
 
-    let targetLineIndex: number | undefined = undefined;
-
-    for (
-      let lineIndex: number = 0;
-      lineIndex < document.lineCount;
-      lineIndex++
-    ) {
-      const line: vscode.TextLine = document.lineAt(lineIndex);
-      if (
-        line.text.includes("console.log") &&
-        !line.text.includes("'console.log'") &&
-        !line.text.includes('"console.log"')
-      ) {
-        const startPosition: vscode.Position = line.range.start;
-        const endPosition: vscode.Position = line.range.end;
-        const range = new vscode.Range(startPosition, endPosition);
-        activeTextEditor.setDecorations(decorationType, [{ range }]);
-        targetLineIndex = lineIndex;
-        break; // Stop after locating the first occurrence
-      }
-    }
-
-    if (typeof targetLineIndex !== "undefined") {
-      const targetPosition = new vscode.Position(targetLineIndex, 0);
-      activeTextEditor.selection = new vscode.Selection(
-        targetPosition,
-        targetPosition
-      );
-      activeTextEditor.revealRange(
-        new vscode.Range(targetPosition, targetPosition),
-        vscode.TextEditorRevealType.Default
-      );
-    }
-
-    const disposable = vscode.window.onDidChangeTextEditorSelection((event) => {
-      if (event.textEditor === activeTextEditor) {
-        activeTextEditor.setDecorations(decorationType, []);
-        disposable.dispose();
-      }
-    });
+  const text = document.getText();
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    const startPos = document.positionAt(match.index);
+    const endPos = document.positionAt(match.index + match[0].length);
+    edit.delete(document.uri, new vscode.Range(startPos, endPos));
   }
+  await vscode.workspace.applyEdit(edit);
 }
 
-async function deleteAllConsoleLogs() {
-  const activeTextEditor: vscode.TextEditor | undefined =
-    vscode.window.activeTextEditor;
-  if (activeTextEditor) {
-    const document: vscode.TextDocument = activeTextEditor.document;
-    const edit = new vscode.WorkspaceEdit();
+/**
+ * Code Action Provider for lightbulbs
+ */
+class ConsoleActionProvider implements vscode.CodeActionProvider {
+  public provideCodeActions(document: vscode.TextDocument, range: vscode.Range): vscode.CodeAction[] {
+    const config = vscode.workspace.getConfiguration("consoleLogTracker");
+    const methods = config.get<string[]>("methods", ["log"]).join("|");
+    const line = document.lineAt(range.start.line);
 
-    const consoleLogRegex = /(^|\s)(\/\/\s*)?console\.log\([^)]*\);/g;
+    if (!line.text.includes(`console.`)) return [];
 
-    for (
-      let lineIndex: number = 0;
-      lineIndex < document.lineCount;
-      lineIndex++
-    ) {
-      const line: vscode.TextLine = document.lineAt(lineIndex);
-      const match: RegExpMatchArray | null = line.text.match(consoleLogRegex);
-      if (match) {
-        const range = line.range;
-        edit.delete(document.uri, range);
-      }
+    const actions: vscode.CodeAction[] = [];
+
+    // Check for active log
+    if (new RegExp(`console\\.(${methods})\\(`).test(line.text)) {
+      const commentAction = new vscode.CodeAction("Comment out this log", vscode.CodeActionKind.QuickFix);
+      commentAction.command = { command: "extension.commentAllLogs", title: "Comment", arguments: [document] }; // Mocking single line for now
+      actions.push(commentAction);
+
+      const deleteAction = new vscode.CodeAction("Delete this log", vscode.CodeActionKind.QuickFix);
+      deleteAction.command = { command: "extension.deleteAllLogs", title: "Delete" };
+      actions.push(deleteAction);
     }
 
-    // Apply the workspace edit
-    await vscode.workspace.applyEdit(edit);
-  }
-}
-
-async function uncommentAllConsoleLogs() {
-  const activeTextEditor: vscode.TextEditor | undefined =
-    vscode.window.activeTextEditor;
-  if (activeTextEditor) {
-    const document: vscode.TextDocument = activeTextEditor.document;
-    const edit = new vscode.WorkspaceEdit();
-
-    const commentedConsoleLogRegex = /^\s*\/\/\s*console\.log\([^)]*\);/gm;
-
-    for (
-      let lineIndex: number = 0;
-      lineIndex < document.lineCount;
-      lineIndex++
-    ) {
-      const line: vscode.TextLine = document.lineAt(lineIndex);
-      const match: RegExpMatchArray | null = line.text.match(
-        commentedConsoleLogRegex
-      );
-      if (match) {
-        const range = line.range;
-        const uncommentedLine: string = line.text.replace(/\/\//, "");
-        edit.replace(document.uri, range, uncommentedLine);
-      }
-    }
-
-    // Apply the workspace edit
-    await vscode.workspace.applyEdit(edit);
+    return actions;
   }
 }
 
 export function deactivate() {
-  // Clean up resources
-  if (statusBarItem) {
-    statusBarItem.dispose();
-  }
-  if (timeout) {
-    clearTimeout(timeout);
-  }
+  if (statusBarItem) statusBarItem.dispose();
+  if (decorationType) decorationType.dispose();
 }

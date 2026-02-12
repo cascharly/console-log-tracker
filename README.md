@@ -1,42 +1,45 @@
-**Console Log Tracker** is a productivity extension for Visual Studio Code that helps you manage `console.log` statements in your projects. Easily count, locate, comment, or delete logs directly from the status bar.
+**Console Log Tracker** is a productivity extension for Visual Studio Code that helps you manage `console.log`, `warn`, `error`, and other console methods in your projects. Easily count, navigate, highlight, or bulk-process logs directly from the status bar or with keyboard shortcuts.
 
 ![Demo](example_1.png)
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Real-time Counter**: Instantly see the number of `console.log` statements in your active file via the status bar.
-- **Quick Navigation**: Jump to the first occurrence of a `console.log` with a single click.
+- **Real-time Counter**: Instantly see the number of console statements in your active file via the status bar. Supports `log`, `warn`, `error`, `info`, and more.
+- **Smart Highlighting**: Automatically outlines active console statements. Fully customizable via settings.
+- **Modern Command Menu**: A QuickPick menu (`Ctrl+Shift+P` > "Console Log Tracker: Show Menu") for lightning-fast access to all features.
+- **Quick Navigation**: 
+  - `Ctrl+Shift+L` (Cmd+Shift+L): Jump to **Next** log.
+  - `Ctrl+Shift+Alt+L` (Cmd+Shift+Alt+L): Jump to **Previous** log.
 - **Bulk Operations**:
-  - **Highlight**: Visually mark all lines containing logs.
-  - **Comment All**: Comment out every `console.log` statement to silence debug output.
-  - **Uncomment All**: Restore commented logs when you need to debug again.
-  - **Delete All**: Clean up your code by removing all `console.log` statements in one go.
+  - **Comment All**: Prefix console logs with `//` to silence output without deleting code.
+  - **Uncomment All**: Restore logs instantly.
+  - **Delete All**: Clean up production code by removing every console statement.
+- **Auto-Cleanup**: Optional setting to automatically comment out logs when you save your file.
+- **Code Actions**: Click the lightbulb icon next to a console statement for quick context-sensitive actions.
 
 ## 📦 Installation
 
 1. Open **Visual Studio Code**.
-2. Go to the **Extensions** view (`Ctrl+Shift+X` or `Cmd+Shift+X`).
+2. Go to the **Extensions** view (`Ctrl+Shift+X`).
 3. Search for `Console Log Tracker`.
 4. Click **Install**.
 
-## 🛠 Usage
+## 🛠 Configuration
 
-1. Open a supported file (JavaScript or TypeScript).
-2. The **Status Bar** will show an item (e.g., `$(bug) 5 Console Logs`) indicating the count.
-3. **Click** the status bar item to reveal the command menu.
-4. Choose an action:
-   - **Highlight**: Highlights all logs.
-   - **Locate**: Moves cursor to the first log.
-   - **Comment**: Comments out all logs.
-   - **Uncomment**: Uncomments all logs.
-   - **Delete**: Removes all logs.
+Customize the extension to fit your workflow:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `consoleLogTracker.enabled` | Enable/Disable tracking features | `true` |
+| `consoleLogTracker.methods` | Methods to track (log, warn, error, etc.) | `["log", "warn", "error", "info"]` |
+| `consoleLogTracker.highlightColor` | Border color for log highlights | `"#FFB471"` |
+| `consoleLogTracker.autoCleanupOnSave`| Comment out logs automatically on save | `false` |
+| `consoleLogTracker.debounceTimeout` | Delay (ms) before rescanning after typing | `1000` |
 
 ## 💻 Supported Languages
 
-- JavaScript (`.js`)
-- JavaScript React (`.jsx`)
-- TypeScript (`.ts`)
-- TypeScript React (`.tsx`)
+- JavaScript (`.js`, `.jsx`)
+- TypeScript (`.ts`, `.tsx`)
 
 ## 🤝 Contributing
 
