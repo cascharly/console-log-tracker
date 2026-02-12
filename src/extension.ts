@@ -182,7 +182,9 @@ async function showMenu() {
     placeHolder: "Console Log Tracker Actions"
   });
 
-  if (!selection) return;
+  if (!selection) {
+    return;
+  }
 
   switch ((selection as any).id) {
     case "locate": navigateLogs(0); break;
@@ -199,7 +201,9 @@ async function showMenu() {
  */
 function navigateLogs(direction: number) {
   const editor = vscode.window.activeTextEditor;
-  if (!editor || logLocations.length === 0) return;
+  if (!editor || logLocations.length === 0) {
+    return;
+  }
 
   const currentPos = editor.selection.active;
   let targetIndex = 0;
@@ -210,11 +214,16 @@ function navigateLogs(direction: number) {
     // Find the next/previous log relative to cursor
     if (direction > 0) {
       targetIndex = logLocations.findIndex(r => r.start.isAfter(currentPos));
-      if (targetIndex === -1) targetIndex = 0;
+      if (targetIndex === -1) {
+        targetIndex = 0;
+      }
     } else {
       targetIndex = logLocations.slice().reverse().findIndex(r => r.start.isBefore(currentPos));
-      if (targetIndex === -1) targetIndex = logLocations.length - 1;
-      else targetIndex = logLocations.length - 1 - targetIndex;
+      if (targetIndex === -1) {
+        targetIndex = logLocations.length - 1;
+      } else {
+        targetIndex = logLocations.length - 1 - targetIndex;
+      }
     }
   }
 
@@ -283,7 +292,9 @@ class ConsoleActionProvider implements vscode.CodeActionProvider {
     const methods = config.get<string[]>("methods", ["log"]).join("|");
     const line = document.lineAt(range.start.line);
 
-    if (!line.text.includes(`console.`)) return [];
+    if (!line.text.includes(`console.`)) {
+      return [];
+    }
 
     const actions: vscode.CodeAction[] = [];
 
@@ -303,6 +314,13 @@ class ConsoleActionProvider implements vscode.CodeActionProvider {
 }
 
 export function deactivate() {
-  if (statusBarItem) statusBarItem.dispose();
-  if (decorationType) decorationType.dispose();
+  if (statusBarItem) {
+    statusBarItem.dispose();
+  }
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  if (decorationType) {
+    decorationType.dispose();
+  }
 }

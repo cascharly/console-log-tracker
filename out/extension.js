@@ -148,8 +148,9 @@ async function showMenu() {
     const selection = await vscode.window.showQuickPick(items, {
         placeHolder: "Console Log Tracker Actions"
     });
-    if (!selection)
+    if (!selection) {
         return;
+    }
     switch (selection.id) {
         case "locate":
             navigateLogs(0);
@@ -176,8 +177,9 @@ async function showMenu() {
  */
 function navigateLogs(direction) {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || logLocations.length === 0)
+    if (!editor || logLocations.length === 0) {
         return;
+    }
     const currentPos = editor.selection.active;
     let targetIndex = 0;
     if (direction === 0) {
@@ -187,15 +189,18 @@ function navigateLogs(direction) {
         // Find the next/previous log relative to cursor
         if (direction > 0) {
             targetIndex = logLocations.findIndex(r => r.start.isAfter(currentPos));
-            if (targetIndex === -1)
+            if (targetIndex === -1) {
                 targetIndex = 0;
+            }
         }
         else {
             targetIndex = logLocations.slice().reverse().findIndex(r => r.start.isBefore(currentPos));
-            if (targetIndex === -1)
+            if (targetIndex === -1) {
                 targetIndex = logLocations.length - 1;
-            else
+            }
+            else {
                 targetIndex = logLocations.length - 1 - targetIndex;
+            }
         }
     }
     const targetRange = logLocations[targetIndex];
@@ -255,8 +260,9 @@ class ConsoleActionProvider {
         const config = vscode.workspace.getConfiguration("consoleLogTracker");
         const methods = config.get("methods", ["log"]).join("|");
         const line = document.lineAt(range.start.line);
-        if (!line.text.includes(`console.`))
+        if (!line.text.includes(`console.`)) {
             return [];
+        }
         const actions = [];
         // Check for active log
         if (new RegExp(`console\\.(${methods})\\(`).test(line.text)) {
@@ -271,10 +277,15 @@ class ConsoleActionProvider {
     }
 }
 function deactivate() {
-    if (statusBarItem)
+    if (statusBarItem) {
         statusBarItem.dispose();
-    if (decorationType)
+    }
+    if (timeout) {
+        clearTimeout(timeout);
+    }
+    if (decorationType) {
         decorationType.dispose();
+    }
 }
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map
