@@ -1,25 +1,47 @@
-This Visual Studio Code extension provides functionality to count, locate, comment, and delete `console.log` statements in your code.
+**Console Log Tracker** is a productivity extension for Visual Studio Code that helps you manage `console.log` statements in your projects. Easily count, locate, comment, or delete logs directly from the status bar.
 
-![example](example_1.png)
+![Demo](example_1.png)
 
-## Features
+## 🚀 Features
 
-- Counts the number of `console.log` statements in the active text document and displays the count in the status bar.
-- Provides options in the status bar to perform actions on `console.log` statements:
-  - **Highlight**: Highlights all lines containing `console.log` statements.
-  - **Locate**: Move the cursor to the first `console.log` occurrence.
-  - **Comment**: Comments out all `console.log` statements.
-  - **Uncomment**: Uncomments all commented `console.log` statements.
-  - **Delete**: Deletes all `console.log` statements.
+- **Real-time Counter**: Instantly see the number of `console.log` statements in your active file via the status bar.
+- **Quick Navigation**: Jump to the first occurrence of a `console.log` with a single click.
+- **Bulk Operations**:
+  - **Highlight**: Visually mark all lines containing logs.
+  - **Comment All**: Comment out every `console.log` statement to silence debug output.
+  - **Uncomment All**: Restore commented logs when you need to debug again.
+  - **Delete All**: Clean up your code by removing all `console.log` statements in one go.
 
-## Usage
+## 📦 Installation
 
-1. Open a text document containing your code.
-2. The extension will automatically count the `console.log` statements and display the count in the status bar.
-3. Click on the status bar item to open a dropdown menu with action options for `console.log` statements.
-4. Choose an action from the dropdown menu to perform the selected action on `console.log` statements.
+1. Open **Visual Studio Code**.
+2. Go to the **Extensions** view (`Ctrl+Shift+X` or `Cmd+Shift+X`).
+3. Search for `Console Log Tracker`.
+4. Click **Install**.
 
-## Notes
+## 🛠 Usage
 
-- The extension works for JavaScript and Typescript files.
-- The count and actions are based on exact occurrences of `console.log` in the code. It does not consider variations like `console.Log` or `Console.log`.
+1. Open a supported file (JavaScript or TypeScript).
+2. The **Status Bar** will show an item (e.g., `$(bug) 5 Console Logs`) indicating the count.
+3. **Click** the status bar item to reveal the command menu.
+4. Choose an action:
+   - **Highlight**: Highlights all logs.
+   - **Locate**: Moves cursor to the first log.
+   - **Comment**: Comments out all logs.
+   - **Uncomment**: Uncomments all logs.
+   - **Delete**: Removes all logs.
+
+## 💻 Supported Languages
+
+- JavaScript (`.js`)
+- JavaScript React (`.jsx`)
+- TypeScript (`.ts`)
+- TypeScript React (`.tsx`)
+
+## 🤝 Contributing
+
+Found a bug or have a feature request? Please open an issue on the [GitHub Repository](https://github.com/cascharly/console-log-tracker).
+
+## 📄 License
+
+This project is licensed under the MIT License.
