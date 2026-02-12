@@ -1,3 +1,23 @@
-node_modules
+# Build
+out/
+dist/
 *.vsix
-.vscode-test
+
+# Dependencies
+node_modules/
+
+# Test
+.vscode-test/
+coverage/
+.mocha-cache
+
+# Local configuration
+.env
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
