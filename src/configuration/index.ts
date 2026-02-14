@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
 import { z } from 'zod';
 
-export const consoleMethodsSchema = z.enum([
+/**
+ * Supported console methods for tracking
+ */
+const CONSOLE_METHODS = [
     'log',
     'warn',
     'error',
@@ -11,8 +14,15 @@ export const consoleMethodsSchema = z.enum([
     'trace',
     'dir',
     'group'
-]);
+] as const;
 
+export const consoleMethodsSchema = z.enum(CONSOLE_METHODS);
+
+export type ConsoleMethod = z.infer<typeof consoleMethodsSchema>;
+
+/**
+ * Extension configuration schema with runtime validation
+ */
 export const configSchema = z.object({
     enabled: z.boolean().default(true),
     methods: z.array(consoleMethodsSchema).default(['log', 'warn', 'error', 'info']),
@@ -30,10 +40,13 @@ export const configSchema = z.object({
 
 export type Config = z.infer<typeof configSchema>;
 
+/**
+ * Retrieves and validates the extension configuration
+ * @throws {z.ZodError} if configuration is invalid
+ */
 export function getConfiguration(): Config {
     const config = vscode.workspace.getConfiguration('consoleLogTracker');
 
-    // Create an object with the same keys as our schema
     const rawConfig = {
         enabled: config.get('enabled'),
         methods: config.get('methods'),

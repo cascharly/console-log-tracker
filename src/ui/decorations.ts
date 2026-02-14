@@ -48,7 +48,10 @@ export function updateDecorationType() {
 /**
  * Applies decorations to the active editor
  */
-export function applyDecorations(editor: vscode.TextEditor, locations: { range: vscode.Range; method: string }[]) {
+export function applyDecorations(
+    editor: vscode.TextEditor,
+    locations: ReadonlyArray<{ readonly range: vscode.Range; readonly method: string }>
+): void {
     // Group ranges by method
     const methodToRanges = new Map<string, vscode.Range[]>();
 

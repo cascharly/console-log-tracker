@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
+import type { Config } from './configuration';
 import { getConfiguration } from './configuration';
+import type { ScanLocation } from './core/scanner';
 import { scanDocument } from './core/scanner';
 import { commentAllConsoleLogs, uncommentAllConsoleLogs, deleteAllConsoleLogs } from './core/actions';
 import { initStatusBar, updateStatusBar, disposeStatusBar } from './ui/statusBar';
@@ -8,10 +10,21 @@ import { navigateLogs } from './ui/navigation';
 import { showQuickPickMenu } from './ui/menu';
 import { ConsoleActionProvider } from './providers/codeActions';
 
-let timeout: NodeJS.Timeout | undefined;
-let currentLogLocations: { range: vscode.Range; method: string }[] = [];
+/**
+ * Supported languages for console log tracking
+ */
+const SUPPORTED_LANGUAGES = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'] as const;
 
-export function activate(context: vscode.ExtensionContext) {
+/**
+ * Extension state
+ */
+let debounceTimeout: NodeJS.Timeout | undefined;
+let currentLogLocations: ReadonlyArray<ScanLocation> = [];
+
+/**
+ * Activates the extension
+ */
+export function activate(context: vscode.ExtensionContext): void {
   // Initialize UI
   initStatusBar(context);
   updateDecorationType();
@@ -29,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
   // --- Event Listeners ---
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
-      debouncedScan(e.document);
+      handleDocumentChange(e.document);
     }),
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor) {
@@ -39,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onWillSaveTextDocument((e) => {
       const config = getConfiguration();
       if (config.autoCleanupOnSave) {
-        commentAllConsoleLogs(e.document);
+        void commentAllConsoleLogs(e.document);
       }
     })
   );
@@ -47,55 +60,39 @@ export function activate(context: vscode.ExtensionContext) {
   // --- Commands ---
   context.subscriptions.push(
     vscode.commands.registerCommand('extension.showMenu', showQuickPickMenu),
-    vscode.commands.registerCommand('extension.nextLog', () => navigateLogs(currentLogLocations.map(l => l.range), 1)),
-    vscode.commands.registerCommand('extension.previousLog', () => navigateLogs(currentLogLocations.map(l => l.range), -1)),
-    vscode.commands.registerCommand('extension.highlightLogs', () => {
-      const editor = vscode.window.activeTextEditor;
-      if (editor) {
-        const config = getConfiguration();
-        applyDecorations(editor, currentLogLocations);
-
-        // Only clear highlights on selection change if keepHighlights is disabled
-        if (!config.keepHighlights) {
-          const startLine = editor.selection.active.line;
-          const disposable = vscode.window.onDidChangeTextEditorSelection((e) => {
-            if (e.textEditor === editor) {
-              const currentConfig = getConfiguration();
-              // Only clear if we moved to a DIFFERENT line than where we started the highlight
-              if (!currentConfig.keepHighlights && e.selections[0].active.line !== startLine) {
-                applyDecorations(editor, []);
-                disposable.dispose();
-              }
-            }
-          });
-          // Also clear on typing
-          const docDisposable = vscode.workspace.onDidChangeTextDocument((e) => {
-            if (e.document === editor.document) {
-              applyDecorations(editor, []);
-              docDisposable.dispose();
-            }
-          });
-        }
-      }
+    vscode.commands.registerCommand('extension.nextLog', () => {
+      const ranges = currentLogLocations.map(l => l.range);
+      return navigateLogs(ranges, 1);
     }),
+    vscode.commands.registerCommand('extension.previousLog', () => {
+      const ranges = currentLogLocations.map(l => l.range);
+      return navigateLogs(ranges, -1);
+    }),
+    vscode.commands.registerCommand('extension.highlightLogs', handleHighlightCommand),
     vscode.commands.registerCommand('extension.commentAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) { commentAllConsoleLogs(editor.document, range); }
+      if (editor) {
+        void commentAllConsoleLogs(editor.document, range);
+      }
     }),
     vscode.commands.registerCommand('extension.uncommentAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) { uncommentAllConsoleLogs(editor.document, range); }
+      if (editor) {
+        void uncommentAllConsoleLogs(editor.document, range);
+      }
     }),
     vscode.commands.registerCommand('extension.deleteAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
-      if (editor) { deleteAllConsoleLogs(editor.document, range); }
+      if (editor) {
+        void deleteAllConsoleLogs(editor.document, range);
+      }
     })
   );
 
   // --- Code Actions ---
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
-      ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'],
+      [...SUPPORTED_LANGUAGES],
       new ConsoleActionProvider(),
       {
         providedCodeActionKinds: ConsoleActionProvider.providedCodeActionKinds
@@ -107,31 +104,95 @@ export function activate(context: vscode.ExtensionContext) {
   refresh();
 }
 
-function refresh() {
+/**
+ * Handles the highlight logs command
+ */
+function handleHighlightCommand(): void {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    return;
+  }
+
+  const config = getConfiguration();
+  applyDecorations(editor, currentLogLocations);
+
+  // Only setup temporary highlight clearing if keepHighlights is disabled
+  if (!config.keepHighlights) {
+    setupTemporaryHighlightClearing(editor);
+  }
+}
+
+/**
+ * Sets up listeners to clear temporary highlights
+ */
+function setupTemporaryHighlightClearing(editor: vscode.TextEditor): void {
+  const startLine = editor.selection.active.line;
+  const disposables: vscode.Disposable[] = [];
+
+  // Clear on line change
+  const selectionDisposable = vscode.window.onDidChangeTextEditorSelection((e) => {
+    if (e.textEditor === editor) {
+      const config = getConfiguration();
+      const movedToNewLine = e.selections[0]?.active.line !== startLine;
+
+      if (!config.keepHighlights && movedToNewLine) {
+        applyDecorations(editor, []);
+        disposeAll(disposables);
+      }
+    }
+  });
+
+  // Clear on typing
+  const documentDisposable = vscode.workspace.onDidChangeTextDocument((e) => {
+    if (e.document === editor.document) {
+      applyDecorations(editor, []);
+      disposeAll(disposables);
+    }
+  });
+
+  disposables.push(selectionDisposable, documentDisposable);
+}
+
+/**
+ * Disposes all disposables in the array
+ */
+function disposeAll(disposables: vscode.Disposable[]): void {
+  for (const disposable of disposables) {
+    disposable.dispose();
+  }
+  disposables.length = 0;
+}
+
+/**
+ * Refreshes the scan for the active editor
+ */
+function refresh(): void {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     performScan(editor.document);
   }
-  console.log('refresh');
 }
 
-console.log('refresh');
-
-function debouncedScan(document: vscode.TextDocument) {
-  if (timeout) {
-    clearTimeout(timeout);
+/**
+ * Handles document changes with debouncing
+ */
+function handleDocumentChange(document: vscode.TextDocument): void {
+  if (debounceTimeout) {
+    clearTimeout(debounceTimeout);
   }
-  const config = getConfiguration();
 
-  timeout = setTimeout(() => {
+  const config = getConfiguration();
+  debounceTimeout = setTimeout(() => {
     performScan(document);
   }, config.debounceTimeout);
 }
 
-function performScan(document: vscode.TextDocument) {
+/**
+ * Scans a document for console logs and updates UI
+ */
+function performScan(document: vscode.TextDocument): void {
   // Only scan supported languages
-  const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
-  if (!supportedLanguages.includes(document.languageId)) {
+  if (!isSupportedLanguage(document.languageId)) {
     return;
   }
 
@@ -142,23 +203,31 @@ function performScan(document: vscode.TextDocument) {
   updateStatusBar(result.count);
 
   const editor = vscode.window.activeTextEditor;
-  if (editor && editor.document === document) {
+  if (editor?.document === document) {
     if (config.keepHighlights) {
       applyDecorations(editor, currentLogLocations);
     } else {
-      // If keepHighlights is disabled, clear any existing highlights 
-      // unless they are temporary (but since this is called on change/refresh, 
-      // it's generally safe to clear them or leave them alone).
-      // Clearing them here handles the case where the user toggles the setting off.
+      // Clear highlights when setting is disabled
       applyDecorations(editor, []);
     }
   }
 }
 
-export function deactivate() {
+/**
+ * Type guard to check if a language is supported
+ */
+function isSupportedLanguage(languageId: string): languageId is typeof SUPPORTED_LANGUAGES[number] {
+  return SUPPORTED_LANGUAGES.includes(languageId as typeof SUPPORTED_LANGUAGES[number]);
+}
+
+/**
+ * Deactivates the extension
+ */
+export function deactivate(): void {
   disposeStatusBar();
   disposeDecorations();
-  if (timeout) {
-    clearTimeout(timeout);
+
+  if (debounceTimeout) {
+    clearTimeout(debounceTimeout);
   }
 }
