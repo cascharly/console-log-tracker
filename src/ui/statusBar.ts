@@ -18,7 +18,8 @@ export function updateStatusBar(count: number) {
     }
 
     if (count > 0) {
-        statusBarItem.text = `${count} console.log found`;
+        statusBarItem.text = `$(terminal) ${count} Logs`;
+        statusBarItem.tooltip = `${count} console.log found. Click to show menu.`;
         statusBarItem.show();
     } else {
         statusBarItem.hide();
