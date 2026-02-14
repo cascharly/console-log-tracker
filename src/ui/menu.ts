@@ -1,21 +1,29 @@
 import * as vscode from 'vscode';
+import { getCapabilities } from '../utils/capabilities';
 
-export async function showQuickPickMenu() {
+/**
+ * Shows the Quick Pick menu with progressive icon support
+ */
+export async function showQuickPickMenu(): Promise<void> {
     const config = vscode.workspace.getConfiguration('consoleLogTracker');
     const isHighlightPermanent = config.get<boolean>('keepHighlights', false);
+    const capabilities = getCapabilities();
+
+    // Use icons only if supported (VS Code 1.44.0+)
+    const icon = (name: string) => capabilities.hasQuickPickIcons ? `$(${name}) ` : '';
 
     const items: (vscode.QuickPickItem & { id: string })[] = [
         {
-            label: isHighlightPermanent ? '$(eye-closed) Clear Highlights' : '$(eye) Keep Highlights',
+            label: `${icon(isHighlightPermanent ? 'eye-closed' : 'eye')}${isHighlightPermanent ? 'Clear Highlights' : 'Keep Highlights'}`,
             detail: isHighlightPermanent ? 'Disable permanent highlighting' : 'Enable permanent highlighting',
             id: 'toggleHighlights'
         },
-        { label: '$(search) Locate All', detail: 'Jump to the first log found', id: 'locate' },
-        { label: '$(arrow-down) Next Log', detail: 'Jump to the next occurrence', id: 'next' },
-        { label: '$(comment) Comment All', detail: 'Prefix all logs with //', id: 'comment' },
-        { label: '$(comment-discussion) Uncomment All', detail: 'Restore all commented logs', id: 'uncomment' },
-        { label: '$(trash) Delete All', detail: 'Remove all logs from file', id: 'delete' },
-        { label: '$(settings-gear) Settings', detail: 'Open extension settings', id: 'settings' }
+        { label: `${icon('search')}Locate All`, detail: 'Jump to the first log found', id: 'locate' },
+        { label: `${icon('arrow-down')}Next Log`, detail: 'Jump to the next occurrence', id: 'next' },
+        { label: `${icon('comment')}Comment All`, detail: 'Prefix all logs with //', id: 'comment' },
+        { label: `${icon('comment-discussion')}Uncomment All`, detail: 'Restore all commented logs', id: 'uncomment' },
+        { label: `${icon('trash')}Delete All`, detail: 'Remove all logs from file', id: 'delete' },
+        { label: `${icon('settings-gear')}Settings`, detail: 'Open extension settings', id: 'settings' }
     ];
 
     const selection = await vscode.window.showQuickPick(items, {
@@ -36,19 +44,19 @@ export async function showQuickPickMenu() {
             await vscode.commands.executeCommand('extension.highlightLogs');
             break;
         case 'next':
-            vscode.commands.executeCommand('extension.nextLog');
+            await vscode.commands.executeCommand('extension.nextLog');
             break;
         case 'comment':
-            vscode.commands.executeCommand('extension.commentAllLogs');
+            await vscode.commands.executeCommand('extension.commentAllLogs');
             break;
         case 'uncomment':
-            vscode.commands.executeCommand('extension.uncommentAllLogs');
+            await vscode.commands.executeCommand('extension.uncommentAllLogs');
             break;
         case 'delete':
-            vscode.commands.executeCommand('extension.deleteAllLogs');
+            await vscode.commands.executeCommand('extension.deleteAllLogs');
             break;
         case 'settings':
-            vscode.commands.executeCommand('workbench.action.openSettings', 'consoleLogTracker');
+            await vscode.commands.executeCommand('workbench.action.openSettings', 'consoleLogTracker');
             break;
     }
 }

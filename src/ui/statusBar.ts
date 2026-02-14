@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
+import { getCapabilities } from '../utils/capabilities';
 
 let statusBarItem: vscode.StatusBarItem;
 
-export function initStatusBar(context: vscode.ExtensionContext) {
+export function initStatusBar(context: vscode.ExtensionContext): vscode.StatusBarItem {
     statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         100
@@ -12,17 +13,23 @@ export function initStatusBar(context: vscode.ExtensionContext) {
     return statusBarItem;
 }
 
-export function updateStatusBar(totalCount: number) {
+export function updateStatusBar(totalCount: number): void {
     if (!statusBarItem) {
         return;
     }
 
+    const capabilities = getCapabilities();
     statusBarItem.text = `$(terminal) ${totalCount} Logs`;
-    statusBarItem.tooltip = `${totalCount} console logs found in file. Click for actions.`;
+
+    // Only set tooltip if supported (VS Code 1.30.0+)
+    if (capabilities.hasStatusBarTooltip) {
+        statusBarItem.tooltip = `${totalCount} console logs found in file. Click for actions.`;
+    }
+
     statusBarItem.show();
 }
 
-export function disposeStatusBar() {
+export function disposeStatusBar(): void {
     if (statusBarItem) {
         statusBarItem.dispose();
     }

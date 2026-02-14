@@ -9,6 +9,7 @@ import { updateDecorationType, applyDecorations, disposeDecorations } from './ui
 import { navigateLogs } from './ui/navigation';
 import { showQuickPickMenu } from './ui/menu';
 import { ConsoleActionProvider } from './providers/codeActions';
+import { detectCapabilities } from './utils/capabilities';
 
 /**
  * Supported languages for console log tracking
@@ -25,6 +26,9 @@ let currentLogLocations: ReadonlyArray<ScanLocation> = [];
  * Activates the extension
  */
 export function activate(context: vscode.ExtensionContext): void {
+  // Detect capabilities for progressive enhancement
+  const capabilities = detectCapabilities();
+
   // Initialize UI
   initStatusBar(context);
   updateDecorationType();

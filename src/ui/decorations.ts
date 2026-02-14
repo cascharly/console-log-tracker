@@ -1,17 +1,19 @@
 import * as vscode from 'vscode';
 import { getConfiguration } from '../configuration';
+import { getCapabilities } from '../utils/capabilities';
 
 let decorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
 
 /**
  * Updates the decoration style based on user settings
  */
-export function updateDecorationType() {
+export function updateDecorationType(): void {
     // Clear existing decorations
     decorationTypes.forEach(d => d.dispose());
     decorationTypes.clear();
 
     const config = getConfiguration();
+    const capabilities = getCapabilities();
     const defaultColor = config.highlightColor;
     const methodColors = config.colors || {};
 
@@ -22,26 +24,38 @@ export function updateDecorationType() {
     allMethods.forEach(method => {
         const methodColor = methodColors[method];
         const color = typeof methodColor === 'string' ? methodColor : defaultColor;
-        const decoration = vscode.window.createTextEditorDecorationType({
+
+        const decorationOptions: vscode.DecorationRenderOptions = {
             borderColor: color,
             borderWidth: '1px',
             borderStyle: 'solid',
-            borderRadius: '2px',
-            overviewRulerColor: color,
-            overviewRulerLane: vscode.OverviewRulerLane.Right
-        });
+            borderRadius: '2px'
+        };
+
+        // Only add overview ruler if supported
+        if (capabilities.hasOverviewRuler) {
+            decorationOptions.overviewRulerColor = color;
+            decorationOptions.overviewRulerLane = vscode.OverviewRulerLane.Right;
+        }
+
+        const decoration = vscode.window.createTextEditorDecorationType(decorationOptions);
         decorationTypes.set(method, decoration);
     });
 
     // Default decoration for any method not specifically matched
-    const defaultDecoration = vscode.window.createTextEditorDecorationType({
+    const defaultDecorationOptions: vscode.DecorationRenderOptions = {
         borderColor: defaultColor,
         borderWidth: '1px',
         borderStyle: 'solid',
-        borderRadius: '2px',
-        overviewRulerColor: defaultColor,
-        overviewRulerLane: vscode.OverviewRulerLane.Right
-    });
+        borderRadius: '2px'
+    };
+
+    if (capabilities.hasOverviewRuler) {
+        defaultDecorationOptions.overviewRulerColor = defaultColor;
+        defaultDecorationOptions.overviewRulerLane = vscode.OverviewRulerLane.Right;
+    }
+
+    const defaultDecoration = vscode.window.createTextEditorDecorationType(defaultDecorationOptions);
     decorationTypes.set('default', defaultDecoration);
 }
 
