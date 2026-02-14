@@ -45,7 +45,6 @@ All notable changes to the "console-log-tracker" extension will be documented in
 - **Modern QuickPick UI**: Replaced the basic notification menu with a searchable QuickPick menu for faster actions.
 - **Support for more console methods**: Now tracks and manages `warn`, `error`, `info`, `debug`, `table`, etc., in addition to `log`.
 - **Keyboard Shortcuts**: Added `Ctrl+Shift+L` (Next log) and `Ctrl+Shift+Alt+L` (Previous log) for fast navigation.
-- **Auto-Cleanup on Save**: Added an optional setting to automatically comment out logs when saving a file.
 - **Code Actions (Lightbulbs)**: Quick-access lightbulb menu for individual logs.
 - **Customizable Highlighting**: Added settings to change the highlight color and style according to user preference.
 - **Smarter Scanner**: Improved scanning logic to ignore console statements inside strings or existing comments.

@@ -34,7 +34,6 @@ export const configSchema = z.object({
         error: '#FF4D4D',
         info: '#4DA6FF'
     }),
-    autoCleanupOnSave: z.boolean().default(false),
     keepHighlights: z.boolean().default(false),
 });
 
@@ -53,7 +52,6 @@ export function getConfiguration(): Config {
         highlightColor: config.get('highlightColor'),
         debounceTimeout: config.get('debounceTimeout'),
         colors: config.get('colors'),
-        autoCleanupOnSave: config.get('autoCleanupOnSave'),
         keepHighlights: config.get('keepHighlights'),
     };
 

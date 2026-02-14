@@ -15,7 +15,6 @@
   - **Comment All**: Prefix console logs with `//` to silence output without deleting code.
   - **Uncomment All**: Restore logs instantly.
   - **Delete All**: Clean up production code by removing every console statement.
-- **Auto-Cleanup**: Optional setting to automatically comment out logs when you save your file.
 - **Code Actions**: Click the lightbulb icon next to a console statement for quick context-sensitive actions.
 - **Wide Compatibility**: Works on VS Code 1.30.0+ with progressive enhancement for newer features.
 
@@ -37,7 +36,6 @@ Customize the extension to fit your workflow:
 | `consoleLogTracker.highlightColor` | Default border color for log highlights | `"#FFB471"` |
 | `consoleLogTracker.colors` | Custom colors per method (`log`, `warn`, `error`, `info`) | `{ log: "#FFB471", warn: "#FFD700", error: "#FF4D4D", info: "#4DA6FF" }` |
 | `consoleLogTracker.keepHighlights` | Keep highlights persistent (true) or temporary (false) | `false` |
-| `consoleLogTracker.autoCleanupOnSave`| Comment out logs automatically on save | `false` |
 | `consoleLogTracker.debounceTimeout` | Delay (ms) before rescanning after typing | `1000` |
 
 ## 💻 Supported Languages

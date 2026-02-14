@@ -52,12 +52,6 @@ export function activate(context: vscode.ExtensionContext): void {
       if (editor) {
         performScan(editor.document);
       }
-    }),
-    vscode.workspace.onWillSaveTextDocument((e) => {
-      const config = getConfiguration();
-      if (config.autoCleanupOnSave) {
-        void commentAllConsoleLogs(e.document);
-      }
     })
   );
 

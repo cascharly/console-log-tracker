@@ -90,11 +90,6 @@
             }
           }
         },
-        "consoleLogTracker.autoCleanupOnSave": {
-          "type": "boolean",
-          "default": false,
-          "description": "Automatically comment out console logs when saving the file."
-        },
         "consoleLogTracker.keepHighlights": {
           "type": "boolean",
           "default": false,
