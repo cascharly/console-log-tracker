@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 
 export async function showQuickPickMenu() {
     const items: (vscode.QuickPickItem & { id: string })[] = [
-        { label: '$(search) Locate All', detail: 'Highlight all logs in current file', id: 'locate' },
+        { label: '$(check) HighLight', detail: 'Highlight all console logs (manual)', id: 'highlight' },
+        { label: '$(search) Locate All', detail: 'Jump to the first log found', id: 'locate' },
         { label: '$(arrow-down) Next Log', detail: 'Jump to the next occurrence', id: 'next' },
         { label: '$(comment) Comment All', detail: 'Prefix all logs with //', id: 'comment' },
-        { label: '$(comment-discussion) Uncomment All', detail: 'Remove // from logs', id: 'uncomment' },
+        { label: '$(comment-discussion) Uncomment All', detail: 'Restore all commented logs', id: 'uncomment' },
         { label: '$(trash) Delete All', detail: 'Remove all logs from file', id: 'delete' },
         { label: '$(settings-gear) Settings', detail: 'Open extension settings', id: 'settings' }
     ];
@@ -19,8 +20,11 @@ export async function showQuickPickMenu() {
     }
 
     switch (selection.id) {
+        case 'highlight':
+            vscode.commands.executeCommand('extension.highlightLogs');
+            break;
         case 'locate':
-            vscode.commands.executeCommand('extension.nextLog'); // Reusing nextLog(0) logic via commands
+            vscode.commands.executeCommand('extension.nextLog'); // Currently triggers navigation starting at index 0 or similar
             break;
         case 'next':
             vscode.commands.executeCommand('extension.nextLog');

@@ -49,6 +49,20 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('extension.showMenu', showQuickPickMenu),
     vscode.commands.registerCommand('extension.nextLog', () => navigateLogs(currentLogLocations, 1)),
     vscode.commands.registerCommand('extension.previousLog', () => navigateLogs(currentLogLocations, -1)),
+    vscode.commands.registerCommand('extension.highlightLogs', () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        applyDecorations(editor, currentLogLocations);
+
+        // Clear highlights on next selection change (per main branch behavior)
+        const disposable = vscode.window.onDidChangeTextEditorSelection((e) => {
+          if (e.textEditor === editor) {
+            applyDecorations(editor, []);
+            disposable.dispose();
+          }
+        });
+      }
+    }),
     vscode.commands.registerCommand('extension.commentAllLogs', (range?: vscode.Range) => {
       const editor = vscode.window.activeTextEditor;
       if (editor) { commentAllConsoleLogs(editor.document, range); }
@@ -104,11 +118,6 @@ function performScan(document: vscode.TextDocument) {
   currentLogLocations = result.locations;
 
   updateStatusBar(result.count);
-
-  const editor = vscode.window.activeTextEditor;
-  if (editor && editor.document === document) {
-    applyDecorations(editor, currentLogLocations);
-  }
 }
 
 export function deactivate() {

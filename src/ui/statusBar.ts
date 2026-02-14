@@ -18,7 +18,7 @@ export function updateStatusBar(count: number) {
     }
 
     if (count > 0) {
-        statusBarItem.text = `$(list-unordered) ${count} logs found`;
+        statusBarItem.text = `${count} console.log found`;
         statusBarItem.show();
     } else {
         statusBarItem.hide();
