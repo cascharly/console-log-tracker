@@ -9,7 +9,7 @@ import { showQuickPickMenu } from './ui/menu';
 import { ConsoleActionProvider } from './providers/codeActions';
 
 let timeout: NodeJS.Timeout | undefined;
-let currentLogLocations: vscode.Range[] = [];
+let currentLogLocations: { range: vscode.Range; method: string }[] = [];
 
 export function activate(context: vscode.ExtensionContext) {
   // Initialize UI
@@ -47,20 +47,35 @@ export function activate(context: vscode.ExtensionContext) {
   // --- Commands ---
   context.subscriptions.push(
     vscode.commands.registerCommand('extension.showMenu', showQuickPickMenu),
-    vscode.commands.registerCommand('extension.nextLog', () => navigateLogs(currentLogLocations, 1)),
-    vscode.commands.registerCommand('extension.previousLog', () => navigateLogs(currentLogLocations, -1)),
+    vscode.commands.registerCommand('extension.nextLog', () => navigateLogs(currentLogLocations.map(l => l.range), 1)),
+    vscode.commands.registerCommand('extension.previousLog', () => navigateLogs(currentLogLocations.map(l => l.range), -1)),
     vscode.commands.registerCommand('extension.highlightLogs', () => {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
+        const config = getConfiguration();
         applyDecorations(editor, currentLogLocations);
 
-        // Clear highlights on next selection change (per main branch behavior)
-        const disposable = vscode.window.onDidChangeTextEditorSelection((e) => {
-          if (e.textEditor === editor) {
-            applyDecorations(editor, []);
-            disposable.dispose();
-          }
-        });
+        // Only clear highlights on selection change if keepHighlights is disabled
+        if (!config.keepHighlights) {
+          const startLine = editor.selection.active.line;
+          const disposable = vscode.window.onDidChangeTextEditorSelection((e) => {
+            if (e.textEditor === editor) {
+              const currentConfig = getConfiguration();
+              // Only clear if we moved to a DIFFERENT line than where we started the highlight
+              if (!currentConfig.keepHighlights && e.selections[0].active.line !== startLine) {
+                applyDecorations(editor, []);
+                disposable.dispose();
+              }
+            }
+          });
+          // Also clear on typing
+          const docDisposable = vscode.workspace.onDidChangeTextDocument((e) => {
+            if (e.document === editor.document) {
+              applyDecorations(editor, []);
+              docDisposable.dispose();
+            }
+          });
+        }
       }
     }),
     vscode.commands.registerCommand('extension.commentAllLogs', (range?: vscode.Range) => {
@@ -114,10 +129,30 @@ function debouncedScan(document: vscode.TextDocument) {
 }
 
 function performScan(document: vscode.TextDocument) {
+  // Only scan supported languages
+  const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
+  if (!supportedLanguages.includes(document.languageId)) {
+    return;
+  }
+
+  const config = getConfiguration();
   const result = scanDocument(document);
   currentLogLocations = result.locations;
 
   updateStatusBar(result.count);
+
+  const editor = vscode.window.activeTextEditor;
+  if (editor && editor.document === document) {
+    if (config.keepHighlights) {
+      applyDecorations(editor, currentLogLocations);
+    } else {
+      // If keepHighlights is disabled, clear any existing highlights 
+      // unless they are temporary (but since this is called on change/refresh, 
+      // it's generally safe to clear them or leave them alone).
+      // Clearing them here handles the case where the user toggles the setting off.
+      applyDecorations(editor, []);
+    }
+  }
 }
 
 export function deactivate() {

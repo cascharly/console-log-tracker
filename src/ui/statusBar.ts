@@ -12,18 +12,14 @@ export function initStatusBar(context: vscode.ExtensionContext) {
     return statusBarItem;
 }
 
-export function updateStatusBar(count: number) {
+export function updateStatusBar(totalCount: number) {
     if (!statusBarItem) {
         return;
     }
 
-    if (count > 0) {
-        statusBarItem.text = `$(terminal) ${count} Logs`;
-        statusBarItem.tooltip = `${count} console.log found. Click to show menu.`;
-        statusBarItem.show();
-    } else {
-        statusBarItem.hide();
-    }
+    statusBarItem.text = `$(terminal) ${totalCount} Logs`;
+    statusBarItem.tooltip = `${totalCount} console logs found in file. Click for actions.`;
+    statusBarItem.show();
 }
 
 export function disposeStatusBar() {

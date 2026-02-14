@@ -62,10 +62,43 @@
           "default": 1000,
           "description": "Timeout in milliseconds to wait before rescanning after a change."
         },
+        "consoleLogTracker.colors": {
+          "type": "object",
+          "default": {
+            "log": "#FFB471",
+            "warn": "#FFD700",
+            "error": "#FF4D4D",
+            "info": "#4DA6FF"
+          },
+          "description": "Custom colors for different console methods.",
+          "properties": {
+            "log": {
+              "type": "string",
+              "description": "Color for console.log"
+            },
+            "warn": {
+              "type": "string",
+              "description": "Color for console.warn"
+            },
+            "error": {
+              "type": "string",
+              "description": "Color for console.error"
+            },
+            "info": {
+              "type": "string",
+              "description": "Color for console.info"
+            }
+          }
+        },
         "consoleLogTracker.autoCleanupOnSave": {
           "type": "boolean",
           "default": false,
           "description": "Automatically comment out console logs when saving the file."
+        },
+        "consoleLogTracker.keepHighlights": {
+          "type": "boolean",
+          "default": false,
+          "description": "If enabled, console logs will remain highlighted. If disabled, highlights only appear temporarily when requested."
         }
       }
     },

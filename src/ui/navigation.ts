@@ -32,6 +32,8 @@ export function navigateLogs(logLocations: vscode.Range[], direction: number) {
     }
 
     const targetRange = logLocations[targetIndex];
+    // Move cursor to the target log
     editor.selection = new vscode.Selection(targetRange.start, targetRange.start);
-    editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+    // Reveal the range in the editor
+    editor.revealRange(targetRange, vscode.TextEditorRevealType.InCenter);
 }
