@@ -142,7 +142,7 @@
         "id": "consoleLogCounter.status",
         "alignment": "right",
         "priority": 100,
-        "name": "$(alert) Console Log Counter"
+        "name": "$(list-unordered) Console Log Counter"
       }
     ]
   },

@@ -13,12 +13,12 @@ export async function showQuickPickMenu(): Promise<void> {
     const icon = (name: string) => capabilities.hasQuickPickIcons ? `$(${name}) ` : '';
 
     const items: (vscode.QuickPickItem & { id: string })[] = [
+        { label: `${icon('search')}Locate All`, detail: 'Jump to the first log found', id: 'locate' },
         {
             label: `${icon(isHighlightPermanent ? 'eye-closed' : 'eye')}${isHighlightPermanent ? 'Clear Highlights' : 'Keep Highlights'}`,
             detail: isHighlightPermanent ? 'Disable permanent highlighting' : 'Enable permanent highlighting',
             id: 'toggleHighlights'
         },
-        { label: `${icon('search')}Locate All`, detail: 'Jump to the first log found', id: 'locate' },
         { label: `${icon('arrow-down')}Next Log`, detail: 'Jump to the next occurrence', id: 'next' },
         { label: `${icon('comment')}Comment All`, detail: 'Prefix all logs with //', id: 'comment' },
         { label: `${icon('comment-discussion')}Uncomment All`, detail: 'Restore all commented logs', id: 'uncomment' },

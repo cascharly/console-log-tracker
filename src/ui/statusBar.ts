@@ -19,7 +19,7 @@ export function updateStatusBar(totalCount: number): void {
     }
 
     const capabilities = getCapabilities();
-    statusBarItem.text = `$(terminal) ${totalCount} Logs`;
+    statusBarItem.text = `$(list-unordered) ${totalCount} Logs`;
 
     // Only set tooltip if supported (VS Code 1.30.0+)
     if (capabilities.hasStatusBarTooltip) {
