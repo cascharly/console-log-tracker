@@ -2,7 +2,7 @@
   "name": "console-log-tracker",
   "displayName": "Console log tracker",
   "description": "Count, locate, comment, and delete console.log statements in your code.",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "publisher": "CarlosSpagnoletti",
   "icon": "logo.png",
   "repository": {

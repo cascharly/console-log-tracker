@@ -2,57 +2,36 @@
 
 All notable changes to the "console-log-tracker" extension will be documented in this file.
 
-## [0.2.0] - 2026-02-14
+## [0.1.0] - 2026-02-15
 
 ### Added
-- **Progressive Enhancement**: Extension now supports VS Code versions from 1.30.0+ with automatic capability detection
-- **Per-Method Custom Colors**: Configure different highlight colors for `log`, `warn`, `error`, `info` methods
-- **Keep Highlights Toggle**: New setting to keep console log highlights persistent or temporary
-- **Active/Commented Log Distinction**: Scanner now identifies and tracks both active and commented console logs
-- **Quick Pick Icons**: Visual icons in menu for better UX (on VS Code 1.44.0+)
-- **Capability Detection System**: Automatic feature detection based on VS Code version
-- **Progressive Enhancement Documentation**: Comprehensive docs on version compatibility
-
-### Changed
-- **Major Code Refactoring**: Complete TypeScript refactor following best practices
-  - Readonly interfaces and arrays for immutability
-  - Type-first development with explicit types
-  - Pure functions and better separation of concerns
-  - Comprehensive JSDoc documentation
-- **Improved Status Bar**: Now shows total console log count independently of highlight state
-- **Better Type Safety**: Enhanced type checking throughout codebase
-- **Optimized Scanner**: Single-pass active count calculation for better performance
-- **Smarter Highlight Clearing**: Temporary highlights only clear when moving to different line or typing
-- **Updated Minimum VS Code Version**: Lowered to 1.30.0 (from 1.107.0) for broader compatibility
-
-### Fixed
-- Status bar counter now accurately reflects all console logs (including commented) at all times
-- Fixed status bar showing "0 logs" when toggling highlight settings
-- Fixed "Locate All" not highlighting console logs
-- Prevented scanning non-supported documents from resetting status bar count
-- Improved temporary highlight behavior to not clear immediately on navigation
-
-### Technical
-- Added `src/utils/capabilities.ts` for version feature detection
-- Extracted constants and helper functions for better maintainability
-- Improved disposable management to prevent memory leaks
-- Enhanced regex pattern for more reliable log detection
-- Better error handling and edge case coverage
-
-## [0.1.0] - 2026-02-11
-
-### Added
-- **Modern QuickPick UI**: Replaced the basic notification menu with a searchable QuickPick menu for faster actions.
-- **Support for more console methods**: Now tracks and manages `warn`, `error`, `info`, `debug`, `table`, etc., in addition to `log`.
+- **New UI Icons**: Updated status bar and menu with modern icons (using `$(list-unordered)` for better visibility).
+- **Rearranged Menu**: "Locate All" is now the primary action in the Quick Pick menu.
+- **Progressive Enhancement**: Extension now supports VS Code versions from 1.30.0+ with automatic capability detection.
+- **Per-Method Custom Colors**: Configure different highlight colors for `log`, `warn`, `error`, `info` methods.
+- **Keep Highlights Toggle**: New setting to keep console log highlights persistent or temporary.
+- **Active/Commented Log Distinction**: Scanner now identifies and tracks both active and commented console logs.
+- **Quick Pick Icons**: Visual icons in menu for better UX (on VS Code 1.44.0+).
+- **Capability Detection System**: Automatic feature detection based on VS Code version.
+- **Support for more console methods**: Now tracks and manages `warn`, `error`, `info`, `debug`, `table`, etc.
 - **Keyboard Shortcuts**: Added `Ctrl+Shift+L` (Next log) and `Ctrl+Shift+Alt+L` (Previous log) for fast navigation.
 - **Code Actions (Lightbulbs)**: Quick-access lightbulb menu for individual logs.
-- **Customizable Highlighting**: Added settings to change the highlight color and style according to user preference.
-- **Smarter Scanner**: Improved scanning logic to ignore console statements inside strings or existing comments.
-- **Comprehensive Settings**: Complete set of configuration options to toggle features on/off.
 
 ### Changed
-- Refactored core audio engine and processing pipeline (Internal cleanup).
-- Standardized status bar priority to stay visible alongside other extensions.
+- **Major Code Refactoring**: Complete TypeScript refactor following best practices for performance and stability.
+- **Improved Status Bar**: Now shows total console log count using a clean list icon.
+- **Modern QuickPick UI**: Replaced the basic notification menu with a searchable QuickPick menu.
+- **Smarter Scanner**: Improved scanning logic to ignore console statements inside strings or existing comments.
+- **Better Type Safety**: Enhanced type checking throughout the codebase.
+- **Optimized Scanner**: Single-pass active count calculation for better performance.
+- **Updated Minimum VS Code Version**: Lowered to 1.30.0 for broader compatibility.
+
+### Fixed
+- Fixed status bar accurately reflecting all console logs at all times.
+- Fixed status bar showing "0 logs" when toggling highlight settings.
+- Fixed "Locate All" not highlighting console logs properly.
+- Improved temporary highlight behavior during navigation.
+
 
 ## [0.0.10] - 2025-11-30
 
