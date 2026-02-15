@@ -1,6 +1,6 @@
 **Console Log Tracker** is a productivity extension for Visual Studio Code that helps you manage `console.log`, `warn`, `error`, and other console methods in your projects. Easily count, navigate, highlight, or bulk-process logs directly from the status bar or with keyboard shortcuts.
 
-![Demo](example_1.png)
+![Demo](example_2.png)
 
 ## 🚀 Key Features
 

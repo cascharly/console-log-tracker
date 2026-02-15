@@ -83,7 +83,7 @@ All notable changes to the "console-log-tracker" extension will be documented in
 ## [0.0.2] - 2023-07-03
 
 ### Added
-- Example screenshot (`example_1.png`) added to documentation
+- Example screenshot (`example_2.png`) added to documentation
 
 ### Changed
 - Documentation updates
