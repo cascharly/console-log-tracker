@@ -2,6 +2,11 @@
 
 All notable changes to the "console-log-tracker" extension will be documented in this file.
 
+## [0.1.1] - 2026-02-18
+
+### Fixed
+- Fixed extension not working when installed from a `.vsix` file. The runtime dependency on `zod` v4 (an ES Module-only package) caused a silent failure when VS Code loaded the extension via CommonJS `require()`. Replaced Zod with lightweight built-in TypeScript validation, eliminating all external runtime dependencies.
+
 ## [0.1.0] - 2026-02-15
 
 ### Added
