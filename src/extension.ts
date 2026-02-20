@@ -4,7 +4,7 @@ import { getConfiguration } from './configuration';
 import type { ScanLocation } from './core/scanner';
 import { scanDocument } from './core/scanner';
 import { commentAllConsoleLogs, uncommentAllConsoleLogs, deleteAllConsoleLogs } from './core/actions';
-import { initStatusBar, updateStatusBar, disposeStatusBar } from './ui/statusBar';
+import { initStatusBar, updateStatusBar, hideStatusBar, disposeStatusBar } from './ui/statusBar';
 import { updateDecorationType, applyDecorations, disposeDecorations } from './ui/decorations';
 import { navigateLogs } from './ui/navigation';
 import { showQuickPickMenu } from './ui/menu';
@@ -51,6 +51,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor) {
         performScan(editor.document);
+      } else {
+        hideStatusBar();
       }
     })
   );
@@ -191,6 +193,7 @@ function handleDocumentChange(document: vscode.TextDocument): void {
 function performScan(document: vscode.TextDocument): void {
   // Only scan supported languages
   if (!isSupportedLanguage(document.languageId)) {
+    hideStatusBar();
     return;
   }
 

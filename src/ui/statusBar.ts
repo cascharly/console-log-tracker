@@ -18,6 +18,11 @@ export function updateStatusBar(totalCount: number): void {
         return;
     }
 
+    if (totalCount === 0) {
+        statusBarItem.hide();
+        return;
+    }
+
     const capabilities = getCapabilities();
     statusBarItem.text = `$(list-unordered) ${totalCount} Logs`;
 
@@ -27,6 +32,12 @@ export function updateStatusBar(totalCount: number): void {
     }
 
     statusBarItem.show();
+}
+
+export function hideStatusBar(): void {
+    if (statusBarItem) {
+        statusBarItem.hide();
+    }
 }
 
 export function disposeStatusBar(): void {
