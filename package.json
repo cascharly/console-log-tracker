@@ -94,6 +94,11 @@
           "type": "boolean",
           "default": false,
           "description": "If enabled, console logs will remain highlighted. If disabled, highlights only appear temporarily when requested."
+        },
+        "consoleLogTracker.showStatusOnZeroLogs": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show status bar item even when there are 0 logs found."
         }
       }
     },

@@ -19,8 +19,11 @@ export function updateStatusBar(totalCount: number): void {
     }
 
     if (totalCount === 0) {
-        statusBarItem.hide();
-        return;
+        const showOnZero = vscode.workspace.getConfiguration('consoleLogTracker').get('showStatusOnZeroLogs', false);
+        if (!showOnZero) {
+            statusBarItem.hide();
+            return;
+        }
     }
 
     const capabilities = getCapabilities();

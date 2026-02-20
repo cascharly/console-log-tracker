@@ -2,6 +2,14 @@
 
 All notable changes to the "console-log-tracker" extension will be documented in this file.
 
+## [0.1.2] - 2026-02-19
+
+### Added
+- **Status Bar Setting**: Added `consoleLogTracker.showStatusOnZeroLogs` (default: false) to control whether the status bar counter is visible when no console logs are found.
+
+### Changed
+- **Status Bar Visibility**: The status bar counter now hides automatically when no console logs are found, unless `showStatusOnZeroLogs` is enabled.
+
 ## [0.1.1] - 2026-02-18
 
 ### Fixed

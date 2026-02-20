@@ -36,6 +36,7 @@ Customize the extension to fit your workflow:
 | `consoleLogTracker.highlightColor` | Default border color for log highlights | `"#FFB471"` |
 | `consoleLogTracker.colors` | Custom colors per method (`log`, `warn`, `error`, `info`) | `{ log: "#FFB471", warn: "#FFD700", error: "#FF4D4D", info: "#4DA6FF" }` |
 | `consoleLogTracker.keepHighlights` | Keep highlights persistent (true) or temporary (false) | `false` |
+| `consoleLogTracker.showStatusOnZeroLogs` | Show status bar item even when 0 logs found | `false` |
 | `consoleLogTracker.debounceTimeout` | Delay (ms) before rescanning after typing | `1000` |
 
 ## 💻 Supported Languages
